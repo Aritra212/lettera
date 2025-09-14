@@ -11,8 +11,10 @@ export interface IResumeData {
 }
 
 export interface IModelInfo {
-  provider: "open-ai" | "gemini";
+  provider: Providers;
   apiKey: string;
   date: Date;
   isActive: boolean;
 }
+
+export type Providers = "open-ai" | "gemini";

@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { IJobDetailsForm } from "@/components/forms/schemas/job-details-schema";
 import { IModelInfo, IResumeData } from "@/types/common.interfaces";
 
 interface AppState {
@@ -12,16 +11,15 @@ interface AppState {
   // AI Model Keys
   aiModelKeys: IModelInfo[];
   addAIModelKey: (key: IModelInfo) => void;
-  updateAIModelKey: (provider: string, newKey: string) => void;
+  updateAIModelField: <K extends keyof IModelInfo>(
+    provider: string,
+    field: K,
+    value: IModelInfo[K]
+  ) => void;
   removeAIModelKey: (provider: string) => void;
-
-  // Job Form
-  jobDetailsForm: Partial<IJobDetailsForm>;
-  setJobDetailsForm: (data: Partial<IJobDetailsForm>) => void;
-  resetJobDetailsForm: () => void;
 }
 
-export const useAppStore = create<AppState>()(
+export const usePersistentStore = create<AppState>()(
   persist(
     (set) => ({
       // Resumes
@@ -41,24 +39,16 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           aiModelKeys: [...state.aiModelKeys, key],
         })),
-      updateAIModelKey: (provider, newKey) =>
+      updateAIModelField: (provider, field, value) =>
         set((state) => ({
-          aiModelKeys: state.aiModelKeys.map((k) =>
-            k.provider === provider ? { ...k, key: newKey } : k
+          aiModelKeys: state.aiModelKeys.map((model) =>
+            model.provider === provider ? { ...model, [field]: value } : model
           ),
         })),
       removeAIModelKey: (provider) =>
         set((state) => ({
           aiModelKeys: state.aiModelKeys.filter((k) => k.provider !== provider),
         })),
-
-      // Job Form
-      jobDetailsForm: {},
-      setJobDetailsForm: (data) =>
-        set((state) => ({
-          jobDetailsForm: { ...state.jobDetailsForm, ...data },
-        })),
-      resetJobDetailsForm: () => set({ jobDetailsForm: {} }),
     }),
     {
       name: "app-store",

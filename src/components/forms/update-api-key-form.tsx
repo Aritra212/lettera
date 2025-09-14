@@ -8,7 +8,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useForm } from "react-hook-form";
 import { addApiKeySchema, IAddApiForm } from "./schemas/add-api-key-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,67 +19,49 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { getModelProviders } from "@/utils/data-access/models";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { usePersistentStore } from "@/stores/usePersistentStore";
 import { toast } from "sonner";
+import { IModelInfo } from "@/types/common.interfaces";
 
 type Props = {
   children: React.ReactNode;
+  data: IModelInfo;
 };
 
-export default function AddApiDialogForm({ children }: Props) {
+export default function UpdateApiDialogForm({ children, data }: Props) {
   const [open, setOpen] = useState(false);
 
   const form = useForm<IAddApiForm>({
     resolver: zodResolver(addApiKeySchema),
     defaultValues: {
-      isActive: true,
+      isActive: data.isActive,
+      provider: data.provider,
+      apiKey: data.apiKey,
       date: new Date(),
     },
   });
 
-  const modelProviders = getModelProviders();
-  const { addAIModelKey } = usePersistentStore();
+  const { updateAIModelField } = usePersistentStore();
 
   const onSubmit = (values: IAddApiForm) => {
     const { provider, apiKey } = values;
 
-    // Add the new API key to the store
-    addAIModelKey({
-      provider,
-      apiKey,
-      isActive: values.isActive,
-      date: values.date,
-    });
-    form.reset();
+    updateAIModelField(provider, "apiKey", apiKey);
+
     setOpen(false);
-    toast.success("Data stored successfully to your local storage");
+    toast.success("Data updated successfully to your local storage");
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DialogTrigger asChild>{children}</DialogTrigger>
-        </TooltipTrigger>
-        <TooltipContent align="start" side="bottom">
-          Add New API Key
-        </TooltipContent>
-      </Tooltip>
+      <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a New API</DialogTitle>
+          <DialogTitle>Update API Key</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -94,20 +75,9 @@ export default function AddApiDialogForm({ children }: Props) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Select Model Provider</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a provider" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {modelProviders.map((p) => (
-                        <SelectItem value={p.value} key={p.value}>
-                          {p.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Input disabled {...field} />
+                  </FormControl>
                 </FormItem>
               )}
             />
@@ -128,7 +98,7 @@ export default function AddApiDialogForm({ children }: Props) {
 
             <div className="text-right">
               <Button size={"lg"} type="submit">
-                <Plus /> Add
+                Update
               </Button>
             </div>
           </form>
