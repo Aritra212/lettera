@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -81,6 +82,9 @@ export default function AddApiDialogForm({ children }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add a New API</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add a new apy key
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

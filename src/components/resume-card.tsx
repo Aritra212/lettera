@@ -1,21 +1,40 @@
-import { FileText, RotateCcw, Trash2 } from "lucide-react";
+"use client";
+import { usePersistentStore } from "@/stores/usePersistentStore";
+import { IResumeData } from "@/types/common.interfaces";
+import { Trash2 } from "lucide-react";
+import ConfirmDialog from "./ui/custom/confirm-dialog";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
-export default function ResumeCard() {
+type Props = {
+  resumeData: IResumeData;
+};
+export default function ResumeCard({ resumeData }: Props) {
+  const { removeParsedResume } = usePersistentStore();
+
+  const handleDelete = () => {
+    removeParsedResume(resumeData.id);
+  };
   return (
-    <div className="w-full border shadow p-4 rounded-sm grid grid-cols-6 items-center">
-      <div className="flex gap-2 items-center col-span-3">
-        <FileText className="size-4 text-primary shrink-0" />
-        <p className="text-muted-foreground dark:text-foreground leading-tight ">
-          Resume for Frontend Jobs sddd dddd ddddddd dddddd ddddddddddddsssssss
-        </p>
-      </div>
-      <p className="text-[10px] border rounded-full p-0.5 px-3 leading-loose col-span-2 h-fit w-fit text-muted-foreground dark:text-secondary">
-        parsed on : {new Date().toDateString()}
+    <div className="w-full border shadow p-4 rounded-sm flex items-center">
+      <p className="text-muted-foreground dark:text-foreground leading-tight mr-4 ">
+        {resumeData.name}
       </p>
+      <Badge variant={"outline"}>
+        parsed on : {resumeData.date.toString()}
+      </Badge>
 
       <div className="flex gap-4 items-center [&>svg]:size-4 w-fit ml-auto">
-        <RotateCcw />
-        <Trash2 />
+        <ConfirmDialog
+          title="Delete Resume Data?"
+          description={`Are you sure you want to delete the Resume Data?`}
+          confirmText="Delete"
+          onConfirm={handleDelete}
+        >
+          <Button variant="ghost" size="icon">
+            <Trash2 />
+          </Button>
+        </ConfirmDialog>
       </div>
     </div>
   );
