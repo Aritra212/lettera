@@ -1,5 +1,5 @@
-import EditorFooter from "./footer";
-import EditorNavbar from "./navbar";
+import EditorFooter from "@/components/editor/footer";
+import EditorNavbar from "@/components/editor/navbar";
 
 type Props = {
   children: React.ReactNode;

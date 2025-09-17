@@ -30,10 +30,12 @@ import {
 import { getModelProviders } from "@/utils/data-access/models";
 import { IOption } from "@/types/common.interfaces";
 import { Button } from "../ui/button";
+import { usePersistentStore } from "@/stores/usePersistentStore";
 
 export default function JobDetailsForm() {
   const [service, setService] = useState<"mail" | "cover-letter">("mail");
   const [models, setModels] = useState<IOption[]>([]);
+  const { parsedResumes } = usePersistentStore();
 
   const modelProviders = getModelProviders();
   const form = useForm<IJobDetailsForm>({
@@ -152,9 +154,24 @@ export default function JobDetailsForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Select Resume *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter your name" {...field} />
-              </FormControl>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                defaultValue={parsedResumes[0]?.id ?? ""}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a provider" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {parsedResumes.map((p) => (
+                    <SelectItem value={p.id} key={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -181,6 +198,7 @@ export default function JobDetailsForm() {
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
