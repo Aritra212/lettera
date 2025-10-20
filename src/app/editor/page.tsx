@@ -1,5 +1,5 @@
 import InputWrapper from "@/components/editor/input-section/input-wrapper";
-import OutputWrapper from "@/components/editor/output-wrapper";
+import OutputWrapper from "@/components/editor/output-section/output-wrapper";
 
 export default function MainPage() {
   return (
