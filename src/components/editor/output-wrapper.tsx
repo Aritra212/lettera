@@ -4,7 +4,7 @@ import { Download, PenLine } from "lucide-react";
 export default function OutputWrapper() {
   return (
     <div className="w-full">
-      <div className="border-b px-4 py-1 flex gap-4 justify-end">
+      <div className="border-b px-7 h-12 flex gap-4 justify-end items-center">
         <Button size={"icon-sm"} variant={"outline"}>
           <PenLine />
         </Button>

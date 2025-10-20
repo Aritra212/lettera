@@ -14,7 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
@@ -27,29 +27,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { getModelProviders } from "@/utils/data-access/models";
+import {
+  getModelProviders,
+  getModelsByProvider,
+} from "@/utils/data-access/models";
 import { IOption } from "@/types/common.interfaces";
 import { Button } from "../ui/button";
 import { usePersistentStore } from "@/stores/usePersistentStore";
+import { getProviderByName } from "@/lib/getProvider";
 
 export default function JobDetailsForm() {
   const [service, setService] = useState<"mail" | "cover-letter">("mail");
   const [models, setModels] = useState<IOption[]>([]);
   const { parsedResumes } = usePersistentStore();
 
-  const modelProviders = getModelProviders();
+  const { aiModelKeys } = usePersistentStore();
+  const activeProviders = aiModelKeys.filter((d) => d.isActive);
   const form = useForm<IJobDetailsForm>({
     resolver: zodResolver(jobdetailsSchema),
     defaultValues: {
       date: new Date(),
       recipient: "Hiring Manager",
-      provider: modelProviders[0].value ?? "",
+      provider: activeProviders[0]?.provider ?? "",
+      model: models[0]?.value ?? "",
+      jobType: "full-time",
+      tone: "formal",
+      resume: parsedResumes[0]?.id ?? "",
+      company: "",
+      jobDescription: "",
+      name: "",
+      role: "",
     },
   });
 
   const onSubmit = (values: IJobDetailsForm) => {
     console.log(values);
   };
+
+  const selectedProvider = form.watch("provider");
+
+  useEffect(() => {
+    if (selectedProvider.length)
+      setModels(getModelsByProvider(selectedProvider));
+  }, [selectedProvider]);
 
   return (
     <Form {...form}>
@@ -89,16 +109,37 @@ export default function JobDetailsForm() {
             </FormItem>
           )}
         />
-
-        <div className="grid grid-cols-2 gap-x-4 gap-y-6">
+        <FormField
+          control={form.control}
+          name="company"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Company Name *</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter name of the compnay" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 items-start">
           <FormField
             control={form.control}
-            name="company"
+            name="jobType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company Name *</FormLabel>
+                <FormLabel>Job Type</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter name of the compnay" {...field} />
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full-time">Full-Time</SelectItem>
+                      <SelectItem value="part-time">Part-Time</SelectItem>
+                      <SelectItem value="internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,34 +189,60 @@ export default function JobDetailsForm() {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="resume"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Select Resume *</FormLabel>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                defaultValue={parsedResumes[0]?.id ?? ""}
-              >
+        <div className="grid grid-cols-2 gap-4 items-start">
+          <FormField
+            control={form.control}
+            name="resume"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Select Resume *</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a resume" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {parsedResumes.length > 0 ? (
+                      parsedResumes.map((p) => (
+                        <SelectItem value={p.id} key={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center my-10">
+                        No resumes found
+                      </p>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="tone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tone of Message</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a provider" />
-                  </SelectTrigger>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="formal">Formal</SelectItem>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
-                <SelectContent>
-                  {parsedResumes.map((p) => (
-                    <SelectItem value={p.id} key={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -191,11 +258,17 @@ export default function JobDetailsForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {modelProviders.map((p) => (
-                      <SelectItem value={p.value} key={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
+                    {activeProviders.length > 0 ? (
+                      activeProviders.map((p) => (
+                        <SelectItem value={p.provider} key={p.provider}>
+                          {getProviderByName(p.provider)?.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center my-10">
+                        No api key found
+                      </p>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -204,7 +277,7 @@ export default function JobDetailsForm() {
           />
           <FormField
             control={form.control}
-            name="provider"
+            name="model"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Select Model</FormLabel>
@@ -214,7 +287,7 @@ export default function JobDetailsForm() {
                   disabled={models.length < 1}
                 >
                   <FormControl>
-                    <SelectTrigger disabled>
+                    <SelectTrigger>
                       <SelectValue placeholder="Select a model" />
                     </SelectTrigger>
                   </FormControl>

@@ -10,6 +10,8 @@ export const jobdetailsSchema = z.object({
   model: z.string({ error: "Model required" }),
   provider: z.string({ error: "Model type is required" }),
   recipient: z.string({ error: "Recipient is required" }),
+  tone: z.string().optional(),
+  jobType: z.string().optional(),
 });
 
 export type IJobDetailsForm = z.infer<typeof jobdetailsSchema>;

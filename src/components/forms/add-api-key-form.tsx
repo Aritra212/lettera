@@ -47,6 +47,7 @@ export default function AddApiDialogForm({ children }: Props) {
     defaultValues: {
       isActive: true,
       date: new Date(),
+      apiKey: "",
     },
   });
 
