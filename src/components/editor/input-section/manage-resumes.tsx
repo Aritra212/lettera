@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import ButtonTooltip from "@/components/ui/custom/button-tooltip";
 import { usePersistentStore } from "@/stores/usePersistentStore";
 import { FileText, Plus } from "lucide-react";
-import Show from "../show";
+import Show from "../../show";
 
 export default function ManageResumes() {
   const { parsedResumes } = usePersistentStore();
