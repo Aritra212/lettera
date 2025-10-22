@@ -35,13 +35,22 @@ import { IOption } from "@/types/common.interfaces";
 import { Button } from "../ui/button";
 import { usePersistentStore } from "@/stores/usePersistentStore";
 import { getProviderByName } from "@/lib/getProvider";
+import { useTransientStore } from "@/stores/useTransientStore";
+import { AIGeneratorService } from "@/lib/services/ai-generator.service";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function JobDetailsForm() {
   const [service, setService] = useState<"mail" | "cover-letter">("mail");
   const [models, setModels] = useState<IOption[]>([]);
-  const { parsedResumes } = usePersistentStore();
+  const { parsedResumes, aiModelKeys } = usePersistentStore();
+  const {
+    setGeneratedContent,
+    setIsGenerating,
+    setGenerationError,
+    isGenerating,
+  } = useTransientStore();
 
-  const { aiModelKeys } = usePersistentStore();
   const activeProviders = aiModelKeys.filter((d) => d.isActive);
   const form = useForm<IJobDetailsForm>({
     resolver: zodResolver(jobdetailsSchema),
@@ -60,8 +69,50 @@ export default function JobDetailsForm() {
     },
   });
 
-  const onSubmit = (values: IJobDetailsForm) => {
-    console.log(values);
+  const onSubmit = async (values: IJobDetailsForm) => {
+    try {
+      setIsGenerating(true);
+      setGenerationError(null);
+
+      // Find the selected resume
+      const selectedResume = parsedResumes.find((r) => r.id === values.resume);
+      if (!selectedResume) {
+        throw new Error("Selected resume not found");
+      }
+
+      // Find the API key for the selected provider
+      const selectedProvider = aiModelKeys.find(
+        (k) => k.provider === values.provider && k.isActive
+      );
+      if (!selectedProvider) {
+        throw new Error("No active API key found for the selected provider");
+      }
+
+      // Generate content using AI
+      const content = await AIGeneratorService.generateContent({
+        formData: values,
+        resumeData: selectedResume,
+        apiKey: selectedProvider.apiKey,
+        serviceType: service,
+      });
+
+      // Update the store with the generated content
+      setGeneratedContent(content, {
+        model: values.model,
+        provider: values.provider,
+        generatedAt: new Date(),
+        serviceType: service,
+      });
+
+      toast.success("Content generated successfully!");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to generate content";
+      setGenerationError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const selectedProvider = form.watch("provider");
@@ -109,19 +160,34 @@ export default function JobDetailsForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="company"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Company Name *</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter name of the compnay" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-6 items-start">
+          <FormField
+            control={form.control}
+            name="company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company Name *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter name of the company" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Role *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter job role/title" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-6 items-start">
           <FormField
             control={form.control}
@@ -305,8 +371,15 @@ export default function JobDetailsForm() {
         </div>
 
         <div className="text-right">
-          <Button size={"lg"} type="submit">
-            Generate
+          <Button size={"lg"} type="submit" disabled={isGenerating}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate"
+            )}
           </Button>
         </div>
       </form>
