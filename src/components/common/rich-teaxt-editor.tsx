@@ -7,6 +7,8 @@ import Underline from "@tiptap/extension-underline";
 import Heading from "@tiptap/extension-heading";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
+import TextAlign from "@tiptap/extension-text-align";
+import Highlight from "@tiptap/extension-highlight";
 import { useEffect } from "react";
 import EditorMenu from "./editor-menu";
 
@@ -43,11 +45,31 @@ export default function RichTextEditor({
             class: "list-decimal ml-3",
           },
         },
+        code: {
+          HTMLAttributes: {
+            class: "bg-muted px-1 py-0.5 rounded text-sm font-mono",
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class: "bg-muted p-4 rounded-lg font-mono text-sm",
+          },
+        },
       }),
       Underline,
       Heading.configure({ levels: [2, 3] }),
       TextStyle,
       Color.configure({ types: ["textStyle"] }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+        alignments: ["left", "center", "right", "justify"],
+      }),
+      Highlight.configure({
+        multicolor: true,
+        HTMLAttributes: {
+          class: "bg-yellow-200 dark:bg-yellow-800",
+        },
+      }),
     ],
     content,
     editorProps: {
