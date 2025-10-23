@@ -14,9 +14,9 @@ export const AI_MODELS = [
     label: "Gemini",
     value: "gemini",
     models: [
-      { label: "Gemini 1.5 Pro", value: "gemini-1.5-pro" },
-      { label: "Gemini 1.5 Flash", value: "gemini-1.5-flash" },
-      { label: "Gemini 1.0 Pro", value: "gemini-1.0-pro" },
+      { label: "Gemini 2.5 Pro", value: "gemini-2.5-pro" },
+      { label: "Gemini 2.5 Flash", value: "gemini-2.5-flash" },
+      { label: "Gemini 2.5 Flash-Lite", value: "gemini-2.5-flash-lite" },
       { label: "Gemini Nano 1.5", value: "gemini-nano-1.5" },
       { label: "Gemini Nano 1.0", value: "gemini-nano-1.0" },
     ],

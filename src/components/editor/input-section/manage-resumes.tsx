@@ -28,7 +28,7 @@ export default function ManageResumes() {
           Add your resumes here.
         </p>
       </Show>
-      <Show when={parsedResumes.length > 1}>
+      <Show when={parsedResumes.length >= 1}>
         <div className="space-y-4 px-7 py-4">
           {parsedResumes.map((resume) => (
             <ResumeCard key={resume.id} resumeData={resume} />
